@@ -212,34 +212,121 @@ def driverOnRoad(shop_id)
     end
     puts a
     print drv_name, " will take your food\n"
+
+    pos_dr_x = -1
+    pos_dr_y = -1
+
+    pos_sh_x = -1
+    pos_sh_y = -1
+
+    pos_u_x = -1
+    pos_u_y = -1
+
+    for i in 0..4
+        for j in 0..4
+            if $maps[i][j]==" D#{$many_driver.select{|driver| driver.name  == "#{drv_name}"}.map{|name|name.instance_variable_get(:@name)[0]}} "
+                pos_dr_x = i
+                pos_dr_y = j
+            end
+            if $maps[i][j]==" S#{$many_shop.select{|food| food.id  == "#{shop_id}"}.map{|name|name.instance_variable_get(:@name)[0]}} "
+                pos_sh_x = i
+                pos_sh_y = j
+            end
+            if $maps[i][j]==" USER[] "
+                pos_u_x = i
+                pos_u_y = j
+            end
+            if pos_sh_x>=0 and pos_sh_y>=0 and pos_dr_x>=0 and pos_dr_y>=0 and pos_u_x>=0 and pos_u_y>=0
+                break
+            end
+        end
+    end
+
+    while pos_sh_y != pos_dr_y
+        if pos_sh_y > pos_dr_y
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_y+=1
+        elsif pos_sh_y < pos_dr_y
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_y -= 1
+        end
+    end
+
+    while pos_sh_x != pos_dr_x
+        if pos_sh_x > pos_dr_x
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_x+=1
+        elsif pos_sh_x < pos_dr_x
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_x-=1
+        end
+    end
+
+    puts "Driver already arive in shop with coordinate #{pos_sh_x}, #{pos_sh_y}"
+    puts "Driver take your food"
+    puts "Driver delivering the food"
+
+    while pos_u_y != pos_dr_y
+        if pos_u_y > pos_dr_y
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_y+=1
+        elsif pos_u_y < pos_dr_y
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_y -= 1
+        end
+    end
+
+    while pos_u_x != pos_dr_x
+        if pos_u_x > pos_dr_x
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_x+=1
+        elsif pos_u_x < pos_dr_x
+            puts "Driver position in #{pos_dr_x}, #{pos_dr_y}"
+            pos_dr_x-=1
+        end
+    end  
+    
+    puts "Driver already sent your food"
+    puts "Please give driver rating (0-5)"
+    rating = gets.chomp.to_i
+    
+    while rating>5
+        puts "WRONG NUMBER"
+        puts "Please give driver rating (0-5)"
+        rating = gets.chomp.to_i
+    end
+
+    $many_driver.select{|drv|drv.name == drv_name}.map{|ratings|ratings.instance_variable_set(:@rating, rating)}
+    puts "Your Transaction Is Over, Thank you"
 end
 
 def showHistory()
     p $history
-    # $show_to_hist = Array.new([])
-    # for i in 0..$history.select{|id|}
-    #     $id_trans = $history.select{|id|id.id == i}.map{|id|id.instance_variable_get(:@id)[0]}
-    #     print $id_trans
-    #     print "\n"
-    #     for j in 0..$many_history.select{|id|id.id_hist == $id_trans}.count-1
-    #         $name = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@menu)[0]}
-    #         $price = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@price)[0]}
-    #         $quantity = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@quantity)[0]}
-    #         $total = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@total)[0]}
+    puts ObjectSpace.each_object(History).count
+    $show_to_hist = Array.new([])
+    for i in 0..ObjectSpace.each_object(History).count-1
+        $id_trans = $history.select{|id|id.id == i}.map{|id|id.instance_variable_get(:@id)}[0]
+        print "Id Trans: ",$id_trans
+        print "\n"
+        for j in 0..$many_history.select{|id|id.id_hist == $id_trans}.count-1
+            $name = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@menu)}[0]
+            $price = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@price)}[0]
+            $quantity = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@quantity)}[0]
+            $total = $many_history.select{|id|id.id == j and id.id_hist == $id_trans}.map{|name|name.instance_variable_get(:@total)}[0]
             
-    #         print $name
-    #         print "\n"
-    #         print $price
-    #         print "\n"
-    #         print $quantity
-    #         print "\n"
-    #         print $total
-    #         print "\n"
-    #     end
-    #     $total_price = $history.select{|id|id.id == i}.map{|id|id.instance_variable_get(:@price)[0]}
-    #     print $total_price
-    #     print "\n"
-    # end
+            print "Product Name = ",$name
+            print "\n"
+            print "Product Price = ",$price
+            print "\n"
+            print "Product Quantity = ",$quantity
+            print "\n"
+            print "Product Total Price = ",$total
+            print "\n"
+        end
+        $total_price = $history.select{|id|id.id == $id_trans}.map{|id|id.instance_variable_get(:@price)}[0]
+        print "Transaction Price = ",$total_price
+        print "\n"
+    end
 end
 
 x = 0
