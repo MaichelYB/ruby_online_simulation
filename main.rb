@@ -105,7 +105,7 @@ def chooseStore()
 
     puts count_shop
     if $shop_id=="x" or $shop_id=="X" or $shop_id.to_i>count_shop
-        puts "Pesanan batal"
+        puts "Fail"
     else
         puts "Please choose food from menu (type just the food id), x to cancel"
         $detil = 0
@@ -164,22 +164,129 @@ def chooseStore()
                 end
             end
             if $more=="N"
-                # puts $many_history.select{|trans_id| trans_id.id_hist == $id}.map{|name|name.instance_variable_get(:@id)}.count-1
                 $price_tot = 0
                 puts $id
-                p $many_history
-                # puts $many_history.select{|trans_id| trans_id.id == i and trans_id.id_hist == $id}.map{|price|Integer(price.instance_variable_get(:@total))}[0]
                 for i in 0..$many_history.select{|trans_id| trans_id.id_hist == $id}.map{|name|name.instance_variable_get(:@id)}.count-1
                     $price_tot+=$many_history.select{|trans_id| trans_id.id_hist == $id}.map{|price|Integer(price.instance_variable_get(:@total))}[i] 
                 end
-                $history << History.new($id, $many_user.map{|id|Integer(id.id)}[0], Date.today, $price_tot)
+                $history << History.new($id, $many_user.map{|id|Integer(id.id)}[0], Date.today, driverPrice($shop_id, $price_tot))
                 $id+=1
+                puts "Must Pay: ",driverPrice($shop_id, $price_tot)
+                puts "Searching for driver"
                 
+                $stdout.flush
+                sleep(10)
+
+                puts "Driver found"
+                $stdout.flush
+                sleep(5)
+
                 driverOnRoad($shop_id)
+
+                File.open('struct.txt', 'w') do |fo|
+                    fo.puts "ID : #{$id}"
+                    fo.puts "USER : #{$many_user.map{|id|Integer(id.id)}[0]}"
+                    fo.puts "Buy:"
+                    $many_history.each{|element|fo.puts(element)}
+                    $show_to_hist = Array.new([])
+                    for j in 0..$many_history.select{|id|id.id_hist == $id}.count-1
+                        $name = $many_history.select{|id|id.id == j and id.id_hist == $id}.map{|name|name.instance_variable_get(:@menu)}[0]
+                        $price = $many_history.select{|id|id.id == j and id.id_hist == $id}.map{|name|name.instance_variable_get(:@price)}[0]
+                        $quantity = $many_history.select{|id|id.id == j and id.id_hist == $id}.map{|name|name.instance_variable_get(:@quantity)}[0]
+                        $total = $many_history.select{|id|id.id == j and id.id_hist == $id}.map{|name|name.instance_variable_get(:@total)}[0]
+                        
+                        fo.puts ($name)
+                        fo.puts($price)
+                        $stdout.flush
+                    end
+                    $total_price = $history.select{|id|id.id == $id}.map{|id|id.instance_variable_get(:@price)}[0]
+                    fo.puts "Total Price : #{$total_price}"
+                end
             end
         end
-        
     end
+end
+
+def driverPrice(shop_id, price_tot)
+    price = 0
+    shop_pos = $many_shop.select{|pos|pos.id == "#{shop_id}"}.map{|pos|Integer(pos.instance_variable_get(:@position))}[0]
+    a = 0
+    drv_name = ""
+    for i in 0..4
+        drv_pos = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|Integer(pos.instance_variable_get(:@position))}[0]
+        if drv_pos > shop_pos
+            if a>0
+                if drv_pos - shop_pos < a
+                    a = drv_pos - shop_pos
+                    drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+                end
+            else
+                a = drv_pos - shop_pos
+                drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+            end
+        else
+            if a>0
+                if shop_pos - drv_pos < a
+                    a = drv_pos - shop_pos
+                    drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+                end
+            else
+                a = shop_pos - drv_pos
+                drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+            end
+        end
+    end
+
+    pos_dr_x = -1
+    pos_dr_y = -1
+
+    pos_sh_x = -1
+    pos_sh_y = -1
+
+    pos_u_x = -1
+    pos_u_y = -1
+
+    for i in 0..4
+        for j in 0..4
+            if $maps[i][j]==" D#{$many_driver.select{|driver| driver.name  == "#{drv_name}"}.map{|name|name.instance_variable_get(:@name)[0]}} "
+                pos_dr_x = i
+                pos_dr_y = j
+            end
+            if $maps[i][j]==" S#{$many_shop.select{|food| food.id  == "#{shop_id}"}.map{|name|name.instance_variable_get(:@name)[0]}} "
+                pos_sh_x = i
+                pos_sh_y = j
+            end
+            if $maps[i][j]==" USER[] "
+                pos_u_x = i
+                pos_u_y = j
+            end
+            if pos_sh_x>=0 and pos_sh_y>=0 and pos_dr_x>=0 and pos_dr_y>=0 and pos_u_x>=0 and pos_u_y>=0
+                break
+            end
+        end
+    end
+
+    while pos_sh_y != pos_dr_y
+        if pos_sh_y > pos_dr_y
+            price += 300
+            pos_dr_y+=1
+        elsif pos_sh_y < pos_dr_y
+            price += 300
+            pos_dr_y -= 1
+        end
+    end
+
+    while pos_sh_x != pos_dr_x
+        if pos_sh_x > pos_dr_x
+            price += 300
+            pos_dr_x+=1
+        elsif pos_sh_x < pos_dr_x
+            price += 300
+            pos_dr_x-=1
+        end
+    end
+
+    return price+price_tot
 end
 
 def driverOnRoad(shop_id)

@@ -1,0 +1,5 @@
+ID : 1
+USER : 0
+Buy:
+#<DetailHistory:0x000000000318d208>
+Total Price : 
