@@ -32,8 +32,8 @@ $many_food << Food.new("2", "1", 'Cake', 4000)
 $many_driver << Driver.new("0", 'Maichel', 0.0, pos[0])
 $many_driver << Driver.new("1", 'Adi', 0.0, pos[1])
 $many_driver << Driver.new("2", 'Suratman', 0.0, pos[2])
-$many_driver << Driver.new("3", 'Suprianto', 0.0, pos[3])
-$many_driver << Driver.new("4", 'Susilo', 0.0, pos[4])
+$many_driver << Driver.new("3", 'Taro', 0.0, pos[3])
+$many_driver << Driver.new("4", 'Cecep', 0.0, pos[4])
 
 $many_shop << Shop.new("0", "Western Restaurant", pos[5])
 $many_shop << Shop.new("1", "Noodle Restaurant", pos[6])
@@ -112,7 +112,7 @@ def chooseStore()
             for i in 0..$many_food.select{|shop_id| shop_id.shop_id == "#{$shop_id}"}.count-1
                 $food_name = $many_food.select{|shop_id|shop_id.shop_id == "#{$shop_id}" and shop_id.id == "#{i}"}.map{|name|name.instance_variable_get(:@name)}[0]
                 $food_price = $many_food.select{|shop_id|shop_id.shop_id == "#{$shop_id}"}.select{|food_id|food_id.id == "#{i}"}.map{|name|name.instance_variable_get(:@price)}[0]
-                print i,$food_name," price: ",$food_price
+                print i, ". menu: ", $food_name," price: ",$food_price
                 print "\n"
             end
 
@@ -173,15 +173,45 @@ def chooseStore()
                     $price_tot+=$many_history.select{|trans_id| trans_id.id_hist == $id}.map{|price|Integer(price.instance_variable_get(:@total))}[i] 
                 end
                 $history << History.new($id, $many_user.map{|id|Integer(id.id)}[0], Date.today, $price_tot)
-                $id+=1    
+                $id+=1
+                
+                driverOnRoad($shop_id)
             end
         end
         
     end
 end
 
-def driverOnRoad(shop_id, driver_id)
-
+def driverOnRoad(shop_id)
+    shop_pos = $many_shop.select{|pos|pos.id == "#{shop_id}"}.map{|pos|Integer(pos.instance_variable_get(:@position))}[0]
+    a = 0
+    drv_name = ""
+    for i in 0..4
+        drv_pos = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|Integer(pos.instance_variable_get(:@position))}[0]
+        if drv_pos > shop_pos
+            if a>0
+                if drv_pos - shop_pos < a
+                    a = drv_pos - shop_pos
+                    drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+                end
+            else
+                a = drv_pos - shop_pos
+                drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+            end
+        else
+            if a>0
+                if shop_pos - drv_pos < a
+                    a = drv_pos - shop_pos
+                    drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+                end
+            else
+                a = shop_pos - drv_pos
+                drv_name = $many_driver.select{|drv|drv.id == "#{i}"}.map{|pos|pos.instance_variable_get(:@name)}[0]
+            end
+        end
+    end
+    puts a
+    print drv_name, " will take your food\n"
 end
 
 def showHistory()
